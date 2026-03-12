@@ -23,8 +23,13 @@ text = "My name is Rahul and my phone number is 9876543210."
 
 results = analyzer.analyze(
     text=text,
-    entities=["PERSON","AADHAAR_NUMBER","PAN_NUMBER","INDIAN_PHONE_NUMBER"],
-    language="en"
+    language="en",
+    entities=[
+        "PERSON",
+        "AADHAAR_NUMBER",
+        "PAN_NUMBER",
+        "INDIAN_PHONE_NUMBER"
+    ]
 )
 for result in results:
     print(result)

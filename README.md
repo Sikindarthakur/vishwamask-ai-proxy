@@ -29,10 +29,10 @@ This ensures that sensitive data never leaves the local environment.
 
 ## Tech Stack
 
-Python
-FastAPI
-Presidio (PII Detection)
-Docker
+- Python
+- FastAPI
+- Presidio (PII Detection)
+- Docker
 
 ## AI Assistance
 
@@ -41,3 +41,21 @@ were generated with assistance from AI tools such as
 ChatGPT and Cursor.
 
 All code has been reviewed and modified by the developer.
+
+## Phase 1 Results
+
+Supported Entities
+- Person Names
+- Indian Mobile Numbers (+91)
+- Aadhaar Numbers
+- PAN Cards
+
+Masking Method
+- Deterministic Token Replacement
+- Reversible Unmasking via PIIVault
+
+Testing
+- Automated tests implemented using pytest
+- Total Tests: 5
+- Passed: 5
+- Reliability: 100%
