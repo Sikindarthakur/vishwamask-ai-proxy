@@ -5,3 +5,6 @@ presidio-analyzer
 presidio-anonymizer
 spacy
 pytest
+requests
+openai
+google-genai
