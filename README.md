@@ -42,20 +42,96 @@ ChatGPT and Cursor.
 
 All code has been reviewed and modified by the developer.
 
-## Phase 1 Results
+## 🧩 Phase 1: PII Detection & Masking Engine
 
-Supported Entities
-- Person Names
-- Indian Mobile Numbers (+91)
-- Aadhaar Numbers
-- PAN Cards
+This phase focuses on building the core privacy engine capable of detecting and masking sensitive Indian data.
 
-Masking Method
-- Deterministic Token Replacement
-- Reversible Unmasking via PIIVault
+### ✅ Supported Entities
 
-Testing
-- Automated tests implemented using pytest
-- Total Tests: 5
-- Passed: 5
-- Reliability: 100%
+- 👤 Person Names
+- 📱 Indian Mobile Numbers (+91 format)
+- 🆔 Aadhaar Numbers
+- 🪪 PAN Cards
+
+### 🔐 Masking Method
+
+- Deterministic Token Replacement (e.g., Rahul → [PERSON_1])
+- Ensures consistency across multiple occurrences
+- Fully reversible using `PIIVault`
+
+### 🔁 Reversible Privacy Vault
+
+- Maintains mapping:
+  - Original → Token
+  - Token → Original
+- Enables safe round-trip AI communication
+
+### 🧪 Testing & Validation
+
+- Automated tests using `pytest`
+- Total Tests: **5**
+- Passed: **5**
+- Reliability: **100%**
+
+### 🎯 Outcome
+
+A fully functional PII detection and masking engine tailored for Indian data formats, forming the foundation for a privacy-first AI proxy.
+
+## 🔁 Phase 2: Proxy Middleware & AI Integration
+
+In this phase, the project evolved from a standalone masking tool into a full privacy-preserving AI proxy.
+
+### ✅ Features Implemented
+
+- 🌐 FastAPI-based backend API
+- 🔐 `/mask-prompt` endpoint for raw masking
+- 🤖 `/chat` endpoint for full proxy flow:
+  - Mask → Send to AI → Receive → Unmask
+- 🔄 Deterministic masking using PIIVault
+- ⚡ Latency tracking for each request
+
+### 🤖 Multi-Provider Support
+
+- 🖥️ Ollama (Local LLM for full privacy)
+- ☁️ OpenAI (Cloud-based inference)
+- 🌟 Gemini (Google AI integration)
+
+Users can dynamically choose the provider via API.
+
+### 🔄 Full Round-Trip Flow
+
+```text
+User Input → Masking → AI Processing → Unmasking → Final Response
+
+## 🚀 Phase 3: Real-time Audit & Persistence
+
+To enhance compliance and observability, Vishwa-Mask now includes a real-time audit logging system.
+
+### ✅ Features Implemented
+
+- 📦 SQLite Database Integration (`audit_logs.db`)
+- 📝 Automatic logging of each PII detection event
+- ⚡ Latency tracking for every request
+- 📊 Streamlit dashboard connected to live data
+- 🔍 Real-time protection logs display
+- 🧠 Risk Mitigation Factor (RMF) calculation
+
+### 🔐 Privacy-first Design
+
+- No raw sensitive data is stored
+- Only metadata is logged:
+  - Entity Type (e.g., Aadhaar, Phone)
+  - Provider used (Ollama / Gemini / OpenAI)
+  - Latency
+  - Timestamp
+
+This ensures compliance with **India's DPDP Act 2023** principles of data minimization and privacy-by-design.
+
+### 📊 Dashboard Insights
+
+- Total prompts processed
+- Total PII entities protected
+- Average latency
+- Protection Ratio
+- Risk Mitigation Factor (RMF)
+- Real-time logs (latest entries)
