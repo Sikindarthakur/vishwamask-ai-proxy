@@ -6,7 +6,6 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Literal
 from presidio_analyzer import AnalyzerEngine
-
 from app.indian_recognizers import (
     aadhaar_recognizer,
     pan_recognizer,
@@ -16,6 +15,13 @@ from app.pii_vault import PIIVault
 
 from openai import OpenAI
 from google import genai
+
+from app.database import engine
+from app.models import Base
+from app.database import SessionLocal
+from app.models import Log
+
+Base.metadata.create_all(bind=engine)
 
 load_dotenv()
 
@@ -101,7 +107,6 @@ def chat(request: PromptRequest):
     start_time = time.time()
 
 
-
     # Step 3: Provider branching
     if provider == "ollama":
         # Ollama REST chat endpoint: /api/chat (or /api/generate)
@@ -173,6 +178,30 @@ def chat(request: PromptRequest):
     final_reply = vault.unmask_text(masked_reply)
 
     latency = round(time.time() - start_time, 3)
+
+    # Logging logic
+    db = SessionLocal()
+
+    if results:
+        # Normal case (PII found)
+        for entity in results:
+            log = Log(
+                provider=provider,
+                entity_type=entity.entity_type,
+                latency=latency
+            )
+            db.add(log)
+    else:
+        # ✅ NO PII case
+        log = Log(
+            provider=provider,
+            entity_type="NO_PII",
+            latency=latency
+        )
+        db.add(log)
+
+    db.commit()
+    db.close()
 
     return {
         "original_prompt": text,

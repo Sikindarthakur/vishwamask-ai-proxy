@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import random
+import sqlite3
 
 # --- Page Config ---
 st.set_page_config(page_title="VishwaMask Audit", layout="wide")
@@ -18,17 +18,22 @@ provider = st.sidebar.selectbox(
 
 api_key = st.sidebar.text_input(
     "API Key (Optional)",
-    type="password",
-    help="Used for cloud providers only"
+    type="password"
 )
 
 st.sidebar.divider()
 st.sidebar.success("Compliance Mode: DPDP Act 2023 🇮🇳")
 
-# --- MOCK DATA (Day 9 only) ---
-total_prompts = random.randint(80, 200)
-total_pii = random.randint(150, 400)
-latency = round(random.uniform(1.5, 6.0), 2)
+# --- DATABASE CONNECTION ---
+conn = sqlite3.connect("audit_logs.db")
+
+df = pd.read_sql_query("SELECT * FROM logs", conn)
+
+# --- Metrics ---
+total_prompts = len(df)
+total_pii = len(df)
+latency = round(df["latency"].mean(), 2) if not df.empty else 0
+pr = round(total_pii / total_prompts, 2) if total_prompts > 0 else 0
 
 # --- Metric Cards ---
 col1, col2, col3, col4 = st.columns(4)
@@ -43,39 +48,51 @@ with col3:
     st.metric("⚡ Avg Latency (s)", latency)
 
 with col4:
-    pr = round(total_pii / total_prompts, 2)
     st.metric("📊 Protection Ratio", pr)
+
+# --- Chart: PII Distribution ---
+st.subheader("📊 PII Detection Distribution")
+
+if not df.empty:
+    chart_data = df.groupby("entity_type").size()
+    st.bar_chart(chart_data)
+else:
+    st.info("No data available for chart yet.")
+
+# --- RMF (Risk Mitigation Factor) ---
+st.subheader("🧠 Risk Mitigation Factor (RMF)")
+
+# Risk weights
+risk_weights = {
+    "AADHAAR_NUMBER": 10,
+    "PAN_NUMBER": 8,
+    "INDIAN_PHONE_NUMBER": 5,
+    "PERSON": 2
+}
+
+rmf = 0
+
+if not df.empty:
+    for entity in df["entity_type"]:
+        rmf += risk_weights.get(entity, 1)
+
+st.metric("🚨 Risk Mitigated Score", rmf)
 
 st.divider()
 
-# --- Protection Log Table ---
+# --- Recent Logs ---
 st.subheader("📋 Real-time Protection Log")
 
-log_data = pd.DataFrame([
-    {
-        "Timestamp": "10:45 AM",
-        "Prompt": "Send money to Rahul",
-        "Masked": "[PERSON_1]",
-        "Provider": "ollama",
-        "Status": "Protected"
-    },
-    {
-        "Timestamp": "10:47 AM",
-        "Prompt": "My Aadhaar is 1234-5678-9012",
-        "Masked": "[AADHAAR_NUMBER_1]",
-        "Provider": "gemini",
-        "Status": "Protected"
-    },
-    {
-        "Timestamp": "10:49 AM",
-        "Prompt": "Call me at 9876543210",
-        "Masked": "[INDIAN_PHONE_NUMBER_1]",
-        "Provider": "ollama",
-        "Status": "Protected"
-    }
-])
+recent_logs = pd.read_sql_query(
+    "SELECT * FROM logs ORDER BY timestamp DESC LIMIT 10",
+    conn
+)
 
-st.dataframe(log_data, use_container_width=True)
+st.dataframe(recent_logs, use_container_width=True)
+
+# --- Refresh Button ---
+if st.button("🔄 Refresh Data"):
+    st.rerun()
 
 # --- Info Section ---
 with st.expander("ℹ Why this matters (DPDP Act 2023)"):
