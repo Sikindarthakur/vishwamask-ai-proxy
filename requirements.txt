@@ -8,3 +8,6 @@ pytest
 requests
 openai
 google-genai
+streamlit
+pandas
+plotly  # Optional, but great for the "Metric Cards" visuals
