@@ -100,7 +100,6 @@ Users can dynamically choose the provider via API.
 
 ### 🔄 Full Round-Trip Flow
 
-```text
 User Input → Masking → AI Processing → Unmasking → Final Response
 
 ## 🚀 Phase 3: Real-time Audit & Persistence
