@@ -3,7 +3,7 @@ import time
 import requests
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Literal
 from presidio_analyzer import AnalyzerEngine
 from app.indian_recognizers import (
@@ -20,6 +20,7 @@ from app.database import engine
 from app.models import Base
 from app.database import SessionLocal
 from app.models import Log
+import html
 
 Base.metadata.create_all(bind=engine)
 
@@ -47,7 +48,7 @@ analyzer.registry.add_recognizer(phone_recognizer)
 
 # --- Request model ---
 class PromptRequest(BaseModel):
-    text: str
+    text: str = Field(..., max_length=5000)
     provider: Literal["ollama", "openai", "gemini"] = "ollama"
     model: str | None = None
 
@@ -84,6 +85,9 @@ def chat(request: PromptRequest):
     text = request.text.strip()
     provider = request.provider
     model = request.model or OLLAMA_MODEL
+
+    # ✅ sanitize input
+    text = html.escape(text)
 
     if not text:
         raise HTTPException(status_code=400, detail="Text cannot be empty")
@@ -176,8 +180,10 @@ def chat(request: PromptRequest):
 
     # Step 4: unmask
     final_reply = vault.unmask_text(masked_reply)
-
+    # leak detection
     latency = round(time.time() - start_time, 3)
+    # leak detection
+    leaks = vault.detect_leak(masked_prompt, masked_reply)
 
     # Logging logic
     db = SessionLocal()
@@ -209,5 +215,6 @@ def chat(request: PromptRequest):
         "ai_response": masked_reply,
         "unmask_response": final_reply,
         "entities_protected": len(vault.vault_registry) if hasattr(vault, "vault_registry") else len(vault.unmask_map),
+        "leak_count": len(leaks),
         "latency_seconds": latency
     }

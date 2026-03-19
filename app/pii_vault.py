@@ -1,3 +1,4 @@
+import re
 class PIIVault:
 
     def __init__(self):
@@ -34,11 +35,26 @@ class PIIVault:
         return masked_text
     
     # Unmask function
-    def unmask_text(self, text):
 
-        unmasked_text = text
+    def unmask_text(self, text: str) -> str:
+        if not text:
+            return text
 
-        for token, value in self.unmask_map.items():
-            unmasked_text = unmasked_text.replace(token, value)
+        # Normalize tokens (remove spaces inside brackets)
+        text = re.sub(r"\[\s*(.*?)\s*\]", r"[\1]", text)
 
-        return unmasked_text
+        # Replace tokens (case insensitive)
+        for token, original in self.unmask_map.items():
+            pattern = re.compile(re.escape(token), re.IGNORECASE)
+            text = pattern.sub(original, text)
+
+        return text
+    
+    def detect_leak(self, masked_prompt, response):
+        leaks = []
+
+        for token in self.unmask_map.keys():
+            if token not in response:
+                leaks.append(token)
+
+        return leaks
