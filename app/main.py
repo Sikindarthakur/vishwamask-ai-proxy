@@ -1,8 +1,9 @@
 import os
 import time
-import requests
+import httpx
+import html
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException , BackgroundTasks
 from pydantic import BaseModel, Field
 from typing import Literal
 from presidio_analyzer import AnalyzerEngine
@@ -20,7 +21,7 @@ from app.database import engine
 from app.models import Base
 from app.database import SessionLocal
 from app.models import Log
-import html
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -52,11 +53,36 @@ class PromptRequest(BaseModel):
     provider: Literal["ollama", "openai", "gemini"] = "ollama"
     model: str | None = None
 
+def save_logs(provider, results, latency):
+    from app.database import SessionLocal
+    from app.models import Log
+
+    db = SessionLocal()
+
+    if results:
+        for entity in results:
+            log = Log(
+                provider=provider,
+                entity_type=entity.entity_type,
+                latency=latency
+            )
+            db.add(log)
+    else:
+        log = Log(
+            provider=provider,
+            entity_type="NO_PII",
+            latency=latency
+        )
+        db.add(log)
+
+    db.commit()
+    db.close()
+
 # --- API Endpoint ---
 @app.post("/mask-prompt")
-def mask_prompt(request: PromptRequest):
+async def mask_prompt(request: PromptRequest):
 
-    text = request.text
+    text = html.escape(request.text)
 
     if not text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
@@ -75,13 +101,14 @@ def mask_prompt(request: PromptRequest):
     masked_text = vault.mask_text(text, results)
 
     return {
+        "original_text": text,
         "masked_text": masked_text,
         "entities_protected": len(results)
     }
 
 
 @app.post("/chat")
-def chat(request: PromptRequest):
+async def chat(request: PromptRequest, background_tasks: BackgroundTasks):
     text = request.text.strip()
     provider = request.provider
     model = request.model or OLLAMA_MODEL
@@ -121,10 +148,10 @@ def chat(request: PromptRequest):
             "stream": False
         }
         try:
-            resp = requests.post(url, json=payload, timeout=60)
-            resp.raise_for_status()
-
-            data = resp.json()
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(url, json=payload, timeout=60)
+                resp.raise_for_status()
+                data = resp.json()
 
             masked_reply = data.get("message", {}).get("content", "")
         except Exception as e:
@@ -183,32 +210,8 @@ def chat(request: PromptRequest):
     # leak detection
     latency = round(time.time() - start_time, 3)
     # leak detection
-    leaks = vault.detect_leak(masked_prompt, masked_reply)
-
-    # Logging logic
-    db = SessionLocal()
-
-    if results:
-        # Normal case (PII found)
-        for entity in results:
-            log = Log(
-                provider=provider,
-                entity_type=entity.entity_type,
-                latency=latency
-            )
-            db.add(log)
-    else:
-        # ✅ NO PII case
-        log = Log(
-            provider=provider,
-            entity_type="NO_PII",
-            latency=latency
-        )
-        db.add(log)
-
-    db.commit()
-    db.close()
-
+    leaks = vault.detect_leak(masked_reply)
+    background_tasks.add_task(save_logs, provider, results, latency)
     return {
         "original_prompt": text,
         "masked_prompt": masked_prompt,

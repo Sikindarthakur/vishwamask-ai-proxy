@@ -50,11 +50,12 @@ class PIIVault:
 
         return text
     
-    def detect_leak(self, masked_prompt, response):
+    def detect_leak(self, response: str):
         leaks = []
 
-        for token in self.unmask_map.keys():
-            if token not in response:
-                leaks.append(token)
+        for token, original in self.unmask_map.items():
+            # ❗ Check if original value leaked in response
+            if original.lower() in response.lower():
+                leaks.append(original)
 
         return leaks
