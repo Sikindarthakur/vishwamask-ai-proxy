@@ -36,7 +36,7 @@ Vishwa-Mask acts as a **Privacy Proxy Layer ("Clean Pipe")** for AI interactions
 
 ### Example:
 
-Rahul → [PERSON_1]
+Rahul → [PERSON_1] <br>
 9876543210 → [INDIAN_PHONE_NUMBER_1]
 
 
@@ -80,13 +80,19 @@ Rahul → [PERSON_1]
 ```mermaid
 graph LR
     User((User)) -->|Prompt with PII| Proxy[FastAPI Proxy]
-    Proxy -->|Local Scan| Presidio
+
+    Proxy -->|Local Scan| Presidio[Presidio (PII Detection)]
     Presidio -->|Masking| Vault[(PII Vault)]
+
     Vault -->|Scrubbed Prompt| LLM[OpenAI / Gemini / Ollama]
     LLM -->|Masked Response| Unmasker[Fuzzy Unmasker]
-    Vault -.->|Mapping| Unmasker
+
+    Vault -.->|Token Mapping| Unmasker
+
     Unmasker -->|Final Response| User
-    Proxy -->|Metadata| Dashboard
+
+    Proxy -->|Metadata| DB[(SQLite)]
+    DB --> Dashboard[Streamlit Dashboard]
 ```
 ## 🚀 Quick Start (Docker)
 
@@ -161,7 +167,7 @@ CI ≈ 1.0 (near 100% compliance)
 
 In accordance with FOSS Hack 2026 rules:
 
-- Code structure and architecture were developed with assistance from AI models including ChatGPT and Claude.  
+- Code structure and architecture were developed with assistance from AI models including ChatGPT and Gemini.  
 - Indian PII recognizers and deterministic vault logic were refined through AI-assisted iteration and testing.  
 
 ---
