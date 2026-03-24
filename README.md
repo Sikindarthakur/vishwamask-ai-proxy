@@ -81,7 +81,7 @@ Rahul → [PERSON_1] <br>
 graph LR
     User((User)) -->|Prompt with PII| Proxy[FastAPI Proxy]
 
-    Proxy -->|Local Scan| Presidio[Presidio (PII Detection)]
+    Proxy -->|Local Scan| Presidio[Presidio - PII Detection]
     Presidio -->|Masking| Vault[(PII Vault)]
 
     Vault -->|Scrubbed Prompt| LLM[OpenAI / Gemini / Ollama]
