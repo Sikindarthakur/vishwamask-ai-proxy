@@ -10,7 +10,8 @@ from presidio_analyzer import AnalyzerEngine
 from app.indian_recognizers import (
     aadhaar_recognizer,
     pan_recognizer,
-    phone_recognizer
+    phone_recognizer,
+    name_pattern
 )
 from app.pii_vault import PIIVault
 
@@ -46,6 +47,7 @@ analyzer = AnalyzerEngine()
 analyzer.registry.add_recognizer(aadhaar_recognizer)
 analyzer.registry.add_recognizer(pan_recognizer)
 analyzer.registry.add_recognizer(phone_recognizer)
+analyzer.registry.add_recognizer(name_pattern)
 
 # --- Request model ---
 class PromptRequest(BaseModel):

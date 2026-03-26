@@ -1,5 +1,5 @@
 # 🛡️ Vishwa-Mask Privacy Proxy  
-### Ensuring DPDP Act 2023 Compliance for Indian AI Applications 🇮🇳
+### Ensuring DPDP Act 2023 Compliance for Indian AI Applications
 
 Vishwa-Mask is an open-source, privacy-preserving gateway designed to sit between Indian users and Generative AI services (like OpenAI, Gemini, or Ollama).
 
@@ -46,7 +46,7 @@ Rahul → [PERSON_1] <br>
 
 ## ✨ Key Features
 
-- 🇮🇳 India-Specific PII Recognition  
+- India-Specific PII Recognition  
   (Aadhaar, PAN, Phone, Names)
 
 - 🔐 Deterministic Masking Vault  

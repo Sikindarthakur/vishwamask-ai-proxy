@@ -35,3 +35,14 @@ phone_recognizer = PatternRecognizer(
     supported_entity="INDIAN_PHONE_NUMBER",
     patterns=[phone_pattern]
 )
+
+name_pattern = PatternRecognizer(
+    supported_entity="PERSON",
+    patterns=[
+        Pattern(
+            name="name_after_phrase",
+            regex=r"(?<=my name is\s)([a-zA-Z]{3,})",
+            score=0.85,
+        )
+    ]
+)
