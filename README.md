@@ -98,8 +98,8 @@ graph LR
 
 ### 1️⃣ Clone Repository
 ```bash
-git clone https://github.com/your-username/vishwa-mask-proxy.git
-cd vishwa-mask-proxy
+git clone https://github.com/Sikindarthakur/vishwamask-ai-proxy.git
+cd vishwamask-ai-proxy
 ```
 ### 2️⃣ Setup Environment
 ```bash
